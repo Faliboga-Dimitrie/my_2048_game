@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:my_2048_game/home_screen.dart';
+import 'package:my_2048_game/features/home/view/home.dart';
+import 'package:my_2048_game/welcome.dart';
+import 'package:my_2048_game/features/auth/view/login_view.dart';
+import 'package:my_2048_game/features/auth/view/register_view.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -21,10 +24,10 @@ class MyApp extends StatelessWidget {
       // Harta rutelor (Named Routes - Vezi 7.5.2)
       // Aici definim "Navigation Graph"-ul aplicației.
       routes: {
-        '/': (context) => const HomeScreen(),
-        // '/layout': (context) => const LayoutExampleScreen(),
-        // '/interactive': (context) => const InteractiveScreen(),
-        // '/list': (context) => const ListExampleScreen(),
+        '/': (context) => const WelcomeScreen(),
+        '/login': (context) => const LoginPage(),
+        '/register': (context) => const RegisterScreen(),
+        '/home': (context) => const HomeScreen(),
         // '/details': (context) => const ProductDetailScreen(),
       },
     );
