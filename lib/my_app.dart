@@ -15,10 +15,7 @@ class MyApp extends StatelessWidget {
     // Similar cu setarea temei (ex: MaterialTheme) la nivelul de sus al ierarhiei în Compose.
     return MaterialApp(
       title: 'Demo Capitolul 7',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        useMaterial3: true,
-      ),
+      theme: ThemeData(primarySwatch: Colors.blue, useMaterial3: true),
       // Definirea rutei inițiale (ecranul de start)
       initialRoute: '/',
       // Harta rutelor (Named Routes - Vezi 7.5.2)

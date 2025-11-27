@@ -10,9 +10,7 @@ class LoginPage extends StatelessWidget {
     return Consumer<LoginViewModel>(
       builder: (context, vm, child) {
         return Scaffold(
-          appBar: AppBar(
-            title: const Text('Login'),
-          ),
+          appBar: AppBar(title: const Text('Login')),
           body: Padding(
             padding: const EdgeInsets.all(16.0),
             child: Form(
@@ -48,23 +46,35 @@ class LoginPage extends StatelessWidget {
                     validator: vm.validatePassword,
                   ),
                   const SizedBox(height: 24),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: vm.isLoading ? null : vm.submit,
-                      child: vm.isLoading
-                          ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Text('Login'),
-                    ),
+                  ElevatedButton(
+                    onPressed: vm.isLoading
+                        ? null
+                        : () async {
+                            final success = await vm.submit();
+                            if (success && context.mounted) {
+                              // navigate to home
+                              Navigator.of(
+                                context,
+                              ).pushReplacementNamed('/home');
+                            } else if (vm.errorMessage != null &&
+                                context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text(vm.errorMessage!)),
+                              );
+                            }
+                          },
+                    child: vm.isLoading
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Text('Login'),
                   ),
                   const SizedBox(height: 8),
                   TextButton(
                     onPressed: () {
-                      // TODO: go to Register view (navigation only)
+                      Navigator.of(context).pushReplacementNamed('/register');
                     },
                     child: const Text("Don't have an account? Register"),
                   ),

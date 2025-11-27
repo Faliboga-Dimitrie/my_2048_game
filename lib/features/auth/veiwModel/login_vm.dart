@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:my_2048_game/features/auth/model/login_model.dart';
+import 'package:my_2048_game/features/auth/service/auth_api_service.dart';
 
 class LoginViewModel extends ChangeNotifier {
+  // Injected dependencies
+  final AuthApiService _authApi;
+  LoginViewModel(this._authApi);
+
   // Form key for validation
   final formKey = GlobalKey<FormState>();
 
@@ -11,13 +15,11 @@ class LoginViewModel extends ChangeNotifier {
 
   bool _isLoading = false;
   bool _obscurePassword = true;
+  String? _errorMessage;
 
   bool get isLoading => _isLoading;
   bool get obscurePassword => _obscurePassword;
-
-  // Example: injected dependency (fake here for now)
-  // final AuthRepository _authRepository;
-  // LoginViewModel(this._authRepository);
+  String? get errorMessage => _errorMessage;
 
   void togglePasswordVisibility() {
     _obscurePassword = !_obscurePassword;
@@ -44,34 +46,40 @@ class LoginViewModel extends ChangeNotifier {
     return null;
   }
 
-  Future<void> submit() async {
+  Future<bool> submit() async {
     // Validate form
     final isValid = formKey.currentState?.validate() ?? false;
-    if (!isValid) return;
+    if (!isValid) return false;
 
     _isLoading = true;
+    _errorMessage = null;
     notifyListeners();
 
     try {
-      final credentials = LoginData(
+      final token = await _authApi.login(
         email: emailController.text.trim(),
         password: passwordController.text,
       );
 
-      // TODO: call your auth service / repository here
-      // await _authRepository.login(credentials);
-
-      await Future.delayed(const Duration(seconds: 1)); // fake delay
-
-      // If successful, you might navigate from outside the VM,
-      // or expose some "success" state.
-
+      // in a real app you’d store the token somewhere
+      debugPrint('Logged in with token: $token');
+      clearForm();
+      return true;
     } catch (e) {
-      // TODO: handle error, set an error message field, etc.
+      _errorMessage = 'Login failed';
+      debugPrint(e.toString());
+      return false;
     } finally {
       _isLoading = false;
       notifyListeners();
     }
+  }
+
+  void clearForm() {
+    emailController.clear();
+    passwordController.clear();
+    _errorMessage = null;
+    notifyListeners();
   }
 
   @override
