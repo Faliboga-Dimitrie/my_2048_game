@@ -13,7 +13,7 @@ class RegisterScreen extends StatelessWidget {
 }
 
 class _RegisterView extends StatefulWidget {
-  const _RegisterView({super.key});
+  const _RegisterView();
 
   @override
   State<_RegisterView> createState() => _RegisterViewState();
