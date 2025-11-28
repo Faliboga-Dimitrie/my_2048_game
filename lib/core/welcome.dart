@@ -17,7 +17,7 @@ class WelcomeScreen extends StatelessWidget {
             ),
             const SizedBox(height: 20), 
             ElevatedButton(
-              onPressed: () => Navigator.pushNamed(context, '/home'),
+              onPressed: () => Navigator.pushNamed(context, '/local_play'),
               child: const Text('1. Play as guest'),
             ),
             ElevatedButton(
