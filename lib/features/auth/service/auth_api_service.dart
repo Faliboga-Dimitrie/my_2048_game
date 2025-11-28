@@ -22,7 +22,6 @@ class AuthApiService {
       final data = jsonDecode(response.body) as Map<String, dynamic>;
       return data['token'] as String;
     } else {
-      // For the assignment it's enough to throw
       throw Exception('Login failed: ${response.body}');
     }
   }

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:my_2048_game/features/auth/veiwModel/login_vm.dart';
+import 'package:my_2048_game/features/auth/view_model/login_vm.dart';
 import 'package:provider/provider.dart';
 
 class LoginPage extends StatelessWidget {
@@ -52,7 +52,6 @@ class LoginPage extends StatelessWidget {
                         : () async {
                             final success = await vm.submit();
                             if (success && context.mounted) {
-                              // navigate to home
                               Navigator.of(
                                 context,
                               ).pushReplacementNamed('/home');

@@ -1,6 +1,6 @@
 // register_screen.dart
 import 'package:flutter/material.dart';
-import 'package:my_2048_game/features/auth/veiwModel/register_vm.dart';
+import 'package:my_2048_game/features/auth/view_model/register_vm.dart';
 import 'package:provider/provider.dart';
 
 class RegisterScreen extends StatelessWidget {
@@ -144,7 +144,6 @@ class _RegisterViewState extends State<_RegisterView> {
                         : () async {
                             final success = await vm.register();
                             if (success && context.mounted) {
-                              // navigate to home
                               Navigator.of(
                                 context,
                               ).pushReplacementNamed('/login');

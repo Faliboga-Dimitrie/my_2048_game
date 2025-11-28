@@ -5,13 +5,9 @@ class WelcomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Scaffold oferă structura de bază a unei pagini (AppBar, Body, FloatingActionButton, etc.).
-    // Este similar cu Scaffold din Jetpack Compose.
     return Scaffold(
       appBar: AppBar(title: const Text('Welcome to 2048 Demo')),
       body: Center(
-        // Column este echivalentul Column din Jetpack Compose.
-        // Aranjează copiii pe verticală.
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -19,12 +15,10 @@ class WelcomeScreen extends StatelessWidget {
               'What do you want to do?:',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 20), // Spacer vertical
-            // Navigare simplă folosind rute denumite
-            // Navigator.pushNamed este similar cu navController.navigate("route")
+            const SizedBox(height: 20), 
             ElevatedButton(
               onPressed: () => Navigator.pushNamed(context, '/home'),
-              child: const Text('1. Log in as guest'),
+              child: const Text('1. Play as guest'),
             ),
             ElevatedButton(
               onPressed: () => Navigator.pushNamed(context, '/login'),

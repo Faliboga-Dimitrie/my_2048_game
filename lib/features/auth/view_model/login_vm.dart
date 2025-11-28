@@ -2,14 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:my_2048_game/features/auth/service/auth_api_service.dart';
 
 class LoginViewModel extends ChangeNotifier {
-  // Injected dependencies
   final AuthApiService _authApi;
   LoginViewModel(this._authApi);
 
-  // Form key for validation
   final formKey = GlobalKey<FormState>();
 
-  // Controllers for text fields (UI state, but we centralize them here)
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
 
@@ -47,7 +44,6 @@ class LoginViewModel extends ChangeNotifier {
   }
 
   Future<bool> submit() async {
-    // Validate form
     final isValid = formKey.currentState?.validate() ?? false;
     if (!isValid) return false;
 
@@ -60,8 +56,7 @@ class LoginViewModel extends ChangeNotifier {
         email: emailController.text.trim(),
         password: passwordController.text,
       );
-
-      // in a real app you’d store the token somewhere
+      
       debugPrint('Logged in with token: $token');
       clearForm();
       return true;

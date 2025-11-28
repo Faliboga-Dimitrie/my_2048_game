@@ -2,14 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:my_2048_game/features/auth/service/auth_api_service.dart';
 
 class RegisterViewModel extends ChangeNotifier {
-  // Injected dependencies
   final AuthApiService _authApi;
   RegisterViewModel(this._authApi);
 
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-  final TextEditingController confirmPasswordController =
-      TextEditingController();
+  final TextEditingController confirmPasswordController = TextEditingController();
   final TextEditingController nameController = TextEditingController();
 
   bool _isLoading = false;
@@ -72,7 +70,6 @@ class RegisterViewModel extends ChangeNotifier {
 
       await Future.delayed(Duration(seconds: 2)); // Simulate network call
 
-      // Handle successful registration
       debugPrint('Registered with token: $token');
       clearForm();
       return true;
