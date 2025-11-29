@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:my_2048_game/features/local_play/data/local_player_repository.dart';
+import 'package:my_2048_game/features/local_play/provider/user_provider.dart';
 import 'package:my_2048_game/features/local_play/view_model/local_player_vm.dart';
 import 'package:provider/provider.dart';
 
@@ -14,9 +15,7 @@ class LocalUserScreen extends StatelessWidget {
     final db = context.read<AppDatabase>();
 
     return ChangeNotifierProvider(
-      create: (_) => LocalUserViewModel(
-        DriftLocalUserRepository(db),
-      ),
+      create: (_) => LocalUserViewModel(DriftLocalUserRepository(db)),
       child: const _LocalUserView(),
     );
   }
@@ -28,11 +27,10 @@ class _LocalUserView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final vm = context.watch<LocalUserViewModel>();
+    final session = context.read<UserSession>();
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Play as Guest'),
-      ),
+      appBar: AppBar(title: const Text('Play as Guest')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -40,10 +38,7 @@ class _LocalUserView extends StatelessWidget {
           children: [
             const Text(
               'How do you want to continue?',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
 
@@ -76,10 +71,7 @@ class _LocalUserView extends StatelessWidget {
             const SizedBox(height: 24),
 
             if (vm.mode == LocalUserMode.newUser) ...[
-              const Text(
-                'Choose a username:',
-                style: TextStyle(fontSize: 16),
-              ),
+              const Text('Choose a username:', style: TextStyle(fontSize: 16)),
               const SizedBox(height: 8),
               TextField(
                 onChanged: vm.setNewUsername,
@@ -125,7 +117,11 @@ class _LocalUserView extends StatelessWidget {
                         final user = await vm.submit();
                         if (user != null && context.mounted) {
                           // username is valid and saved in DB
-                          Navigator.pushReplacementNamed(context, '/home');
+                          session.setUser(user);
+                          Navigator.pushReplacementNamed(
+                            context,
+                            '/home',
+                          );
                         }
                       },
                 child: vm.isLoading

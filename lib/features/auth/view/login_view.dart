@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:my_2048_game/features/auth/view_model/login_vm.dart';
+import 'package:my_2048_game/features/local_play/model/local_user.dart';
+import 'package:my_2048_game/features/local_play/provider/user_provider.dart';
 import 'package:provider/provider.dart';
 
 class LoginPage extends StatelessWidget {
@@ -7,6 +9,8 @@ class LoginPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final session = context.read<UserSession>();
+
     return Consumer<LoginViewModel>(
       builder: (context, vm, child) {
         return Scaffold(
@@ -52,6 +56,7 @@ class LoginPage extends StatelessWidget {
                         : () async {
                             final success = await vm.submit();
                             if (success && context.mounted) {
+                              session.setUser(LocalUser(username: 'mock_user'));
                               Navigator.of(
                                 context,
                               ).pushReplacementNamed('/home');

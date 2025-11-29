@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:my_2048_game/features/local_play/provider/user_provider.dart';
+import 'package:provider/provider.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -10,6 +12,8 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
+    final user = context.watch<UserSession>().currentUser;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('2048'),
@@ -35,7 +39,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       width: double.infinity,
                       child: ElevatedButton(
                         onPressed: () {
-                          // Navigate to new game
+                          Navigator.pushReplacementNamed(
+                            context,
+                            '/game',
+                          );
                         },
                         child: const Text('Start New Game'),
                       ),
