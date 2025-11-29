@@ -219,9 +219,9 @@ class _BoardView extends StatelessWidget {
         if (velocity.dx.abs() > velocity.dy.abs()) {
           // horizontal swipe
           if (velocity.dx > 0) {
-            onMove(Direction.right);
+            onMove(Direction.down);
           } else {
-            onMove(Direction.left);
+            onMove(Direction.up);
           }
         } else {
           // vertical swipe

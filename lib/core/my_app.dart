@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:my_2048_game/core/db/app_database.dart';
 import 'package:my_2048_game/debug/debug_database_screen.dart';
 import 'package:my_2048_game/features/game/view/board_screen.dart';
 import 'package:my_2048_game/features/home/view/home.dart';
