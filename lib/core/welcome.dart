@@ -28,6 +28,10 @@ class WelcomeScreen extends StatelessWidget {
               onPressed: () => Navigator.pushNamed(context, '/register'),
               child: const Text('3. Register as player'),
             ),
+            ElevatedButton(
+              onPressed: () => Navigator.pushNamed(context, '/debug-db'),
+              child: const Text('4. Debug Database'),
+            ),
           ],
         ),
       ),

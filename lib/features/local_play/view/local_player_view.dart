@@ -23,7 +23,7 @@ class LocalUserScreen extends StatelessWidget {
 }
 
 class _LocalUserView extends StatelessWidget {
-  const _LocalUserView({super.key});
+  const _LocalUserView();
 
   @override
   Widget build(BuildContext context) {
