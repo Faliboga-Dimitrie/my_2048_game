@@ -78,7 +78,6 @@ class BoardViewModel extends ChangeNotifier {
     final result = _board.move(direction, _mergeMode);
 
     if (!result.moved) {
-      // No change – no DB update needed.
       return;
     }
 
@@ -91,7 +90,6 @@ class BoardViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Saves the current game state into the DB.
   Future<void> _saveToDb() async {
     if (_currentGameRow == null) return;
 
@@ -111,13 +109,12 @@ class BoardViewModel extends ChangeNotifier {
     _currentGameRow = updated;
   }
 
-  /// If you need to load an existing game manually (e.g. from a "load game" list)
   void loadFromGame(Game game) {
     _currentGameRow = game;
     _board = deserializeBoard(game.boardState, size: _board.size);
     _score = game.score;
     _moveCount = game.moveCount;
-    _isGameOver = false; // or derive from DB if you store it
+    _isGameOver = false;
     notifyListeners();
   }
 }

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:my_2048_game/core/db/app_database.dart';
 import 'package:my_2048_game/features/game/model/board.dart';
+import 'package:my_2048_game/features/game/model/game_mode.dart';
 import 'package:my_2048_game/features/game/view_model/board_vm.dart';
+import 'package:my_2048_game/features/game/view_model/gyro_input_vm.dart';
 import 'package:my_2048_game/features/local_play/provider/user_provider.dart';
 import 'package:provider/provider.dart';
 
@@ -15,11 +17,14 @@ class GameBoardScreen extends StatefulWidget {
 class _GameBoardScreenState extends State<GameBoardScreen> {
   final TextEditingController _sizeController = TextEditingController(text: '4');
   BoardViewModel? _viewModel;
+  GyroInputViewModel? _gyroVM;
+  GameMode _selectedMode = GameMode.classic;
 
   @override
   void dispose() {
     _sizeController.dispose();
     _viewModel?.dispose();
+    _gyroVM?.dispose();
     super.dispose();
   }
 
@@ -43,19 +48,40 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
       db: db,
       userId: userId,
       initialSize: size,
+      mergeMode: MergeMode.values[_selectedMode.index],
     );
 
     await vm.newGame();
 
-    setState(() => _viewModel = vm);
+    final gyro = GyroInputViewModel();
+
+    // Whenever gyro emits a new direction, ask BoardViewModel to move.
+    gyro.addListener(() {
+      final dir = gyro.lastDirection;
+      if (dir != null && !vm.isGameOver) {
+        vm.onMove(dir);
+      }
+    });
+
+    gyro.start();
+
+    setState(() {
+      _viewModel?.dispose();
+      _gyroVM?.dispose();
+      _viewModel = vm;
+      _gyroVM = gyro;
+    });
   }
 
   void _resetSizeSelection() {
     _viewModel?.dispose();
+    _gyroVM?.dispose();
     _viewModel = null;
+    _gyroVM = null;
     _sizeController.text = '4';
     setState(() {});
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -64,58 +90,90 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
 
     // STEP 1: if no viewModel yet, ask for board size
     if (_viewModel == null) {
-      return Scaffold(
-        appBar: AppBar(
-          title: const Text('Choose Board Size'),
-        ),
-        body: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 320),
-            child: Card(
-              margin: const EdgeInsets.all(16),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      'Player: $username',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    const Text(
-                      'Enter board size',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: _sizeController,
-                      keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(
-                        labelText: 'Size (e.g. 4 for 4×4)',
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: _startGame,
-                        child: const Text('Start Game'),
-                      ),
-                    ),
-                  ],
+  return Scaffold(
+    appBar: AppBar(
+      title: const Text('Choose Game Settings'),
+    ),
+    body: Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 340),
+        child: Card(
+          margin: const EdgeInsets.all(16),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  'Player: $username',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
-              ),
+
+                const SizedBox(height: 16),
+
+                // ==== BOARD SIZE ====
+                const Text(
+                  'Board Size',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: _sizeController,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    labelText: 'Size (e.g. 4)',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+
+                const SizedBox(height: 24),
+
+                // ==== GAME MODE ====
+                const Text(
+                  'Game Mode',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+
+                RadioListTile<GameMode>(
+                  value: GameMode.classic,
+                  groupValue: _selectedMode,
+                  title: const Text("Classic"),
+                  onChanged: (v) {
+                    setState(() => _selectedMode = v!);
+                  },
+                ),
+                RadioListTile<GameMode>(
+                  value: GameMode.cascade,
+                  groupValue: _selectedMode,
+                  title: const Text("Cascade"),
+                  onChanged: (v) {
+                    setState(() => _selectedMode = v!);
+                  },
+                ),
+
+                const SizedBox(height: 24),
+
+                // ==== START GAME BUTTON ====
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: _startGame,
+                    child: const Text('Start Game'),
+                  ),
+                ),
+              ],
             ),
           ),
         ),
-      );
-    }
-
+      ),
+    ),
+  );
+}
     // STEP 2: once we have a viewModel, render the board
     final vm = _viewModel!;
 
@@ -130,7 +188,12 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
           ),
           IconButton(
             tooltip: 'New game',
-            onPressed: vm.newGame,
+            onPressed: () async {
+              await vm.newGame();
+              // Maybe also reset some gyro state if needed
+              _gyroVM?.stop();
+              _gyroVM?.start();
+            },
             icon: const Icon(Icons.refresh),
           ),
         ],
@@ -184,6 +247,8 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
                     aspectRatio: 1,
                     child: _BoardView(
                       board: vm.board,
+                      // You no longer need onMove here if you ONLY use gyro.
+                      // You could still keep swipe as backup:
                       onMove: vm.onMove,
                     ),
                   ),
@@ -215,16 +280,15 @@ class _BoardView extends StatelessWidget {
     return GestureDetector(
       // TODO: replace with your gyroscope or proper swipe detection later.
       onPanEnd: (details) {
+        // just for debug / emulator
         final velocity = details.velocity.pixelsPerSecond;
         if (velocity.dx.abs() > velocity.dy.abs()) {
-          // horizontal swipe
           if (velocity.dx > 0) {
-            onMove(Direction.down);
+            onMove(Direction.right);
           } else {
-            onMove(Direction.up);
+            onMove(Direction.left);
           }
         } else {
-          // vertical swipe
           if (velocity.dy > 0) {
             onMove(Direction.down);
           } else {

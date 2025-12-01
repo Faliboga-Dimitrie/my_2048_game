@@ -33,6 +33,7 @@ dependencies:
   drift: ^2.0.0
   drift_flutter: ^0.2.0   # for Flutter integration
   sqlite3_flutter_libs: ^0.5.0
+  sensors_plus: ^7.0.0 
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.

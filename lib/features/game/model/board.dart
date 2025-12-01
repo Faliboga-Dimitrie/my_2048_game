@@ -22,35 +22,23 @@ class Board {
   final int size;
   final List<Tile> cells;
 
-  /// Creates a board with given [size] and [cells].
-  /// [cells] must have length == size * size.
   const Board({
     this.size = 4,
     required this.cells,
   }) : assert(cells.length == size * size);
 
-  /// Creates an empty board (all tiles value = 0).
   factory Board.empty({int size = 4}) {
     return Board(
       size: size,
       cells: List<Tile>.filled(size * size, const Tile.empty(), growable: false),
     );
   }
-
-  /// Helper to convert (row, col) into index in the 1D [cells] list.
+  /// Converts (row, col) to linear index.
   int index(int row, int col) => row * size + col;
 
   /// Get tile at [row], [col].
   Tile tileAt(int row, int col) => cells[index(row, col)];
 
-  /// Returns a new board with tile at [row], [col] replaced.
-  Board setTile(int row, int col, Tile tile) {
-    final newCells = List<Tile>.from(cells);
-    newCells[index(row, col)] = tile;
-    return Board(size: size, cells: newCells);
-  }
-
-  /// Clears all merged flags and returns a new Board instance.
   Board resetMergeFlags() {
     final newCells = cells
         .map((tile) => tile.mergedThisMove ? tile.copyWith(mergedThisMove: false) : tile)
@@ -58,159 +46,312 @@ class Board {
     return Board(size: size, cells: newCells);
   }
 
-  /// Spawns a new tile (2 or 4) in a random empty position.
-  /// Returns a new board.
   Board spawnRandomTile() {
-    // TODO: implement:
-    // 1. Collect indices of tiles with value == 0.
     final emptyIndices = <int>[];
     for (var i = 0; i < cells.length; i++) {
       if (cells[i].isEmpty) {
         emptyIndices.add(i);
       }
     }
-    // 2. If none, return this.
+
     if (emptyIndices.isEmpty) {
       return this;
     }
-    // 3. Pick random empty cell.
-    // A simple random based on current time.
+
     final spawnIndex = emptyIndices[DateTime.now().millisecondsSinceEpoch % emptyIndices.length];
-    // 4. Insert new Tile(value: 2 or 4).
     final newValue = (DateTime.now().millisecondsSinceEpoch % 10 == 0) ? 4 : 2;
     final newCells = List<Tile>.from(cells);
     newCells[spawnIndex] = Tile(value: newValue);
     return Board(size: size, cells: newCells);
   }
 
-  /// Executes a move in the given [direction] with the given [mergeMode]
-  /// and returns a [MoveResult].
   MoveResult move(Direction direction, MergeMode mergeMode) {
-    int gainedScore = 0;
-    bool moved = false;
-    // TODO: implement:
-    // - Reset merge flags
-    var resetBoard = resetMergeFlags();
-    // - Slide tiles in given direction
-    switch (direction) {
-      case Direction.up:
-      for (var c = 0; c < size; c++) {
-          for (var r = 1; r < size; r++) {
-            final currentTile = resetBoard.tileAt(r, c);
-            if (currentTile.isEmpty) continue;
-            var targetRow = r;
-            while (targetRow > 0) {
-              final aboveTile = resetBoard.tileAt(targetRow - 1, c);
-              if (aboveTile.isEmpty) {
-                targetRow--;
-              } else if (aboveTile.value == currentTile.value && !aboveTile.mergedThisMove && !currentTile.mergedThisMove) {
-                // Merge
-                final mergedTile = Tile(value: aboveTile.value * 2, mergedThisMove: true);
-                gainedScore += mergedTile.value;
-                moved = true;
-                resetBoard = resetBoard
-                    .setTile(targetRow - 1, c, mergedTile)
-                    .setTile(r, c, const Tile.empty());
-                break;
-              } else {
-                break;
-              }
-            }
-            if (targetRow != r) {
-              resetBoard = resetBoard
-                  .setTile(targetRow, c, currentTile)
-                  .setTile(r, c, const Tile.empty());
-            }
-          }
-        }
-        break;
-      case Direction.down:
-        for (var c = 0; c < size; c++) {
-          for (var r = size - 2; r >= 0; r--) {
-            final currentTile = resetBoard.tileAt(r, c);
-            if (currentTile.isEmpty) continue;
-            var targetRow = r;
-            while (targetRow < size - 1) {
-              final belowTile = resetBoard.tileAt(targetRow + 1, c);
-              if (belowTile.isEmpty) {
-                targetRow++;
-              } else if (belowTile.value == currentTile.value && !belowTile.mergedThisMove && !currentTile.mergedThisMove) {
-                // Merge
-                final mergedTile = Tile(value: belowTile.value * 2, mergedThisMove: true);
-                gainedScore += mergedTile.value;
-                moved = true;
-                resetBoard = resetBoard
-                    .setTile(targetRow + 1, c, mergedTile)
-                    .setTile(r, c, const Tile.empty());
-                break;
-              } else {
-                break;
-              }
-            }
-            if (targetRow != r) {
-              resetBoard = resetBoard
-                  .setTile(targetRow, c, currentTile)
-                  .setTile(r, c, const Tile.empty());
-            }
-          }
-        }
-        break;
-      case Direction.left:
+  int gainedScore = 0;
+  bool moved = false;
 
-      case Direction.right:
-        
-        break;
-    }
-    // - Spawn random tile if something moved
-    if (moved) {
-      resetBoard = resetBoard.spawnRandomTile();
-    }
-    // - Check game over
-    final isGameOver = !resetBoard.hasMovesLeft();
-    return MoveResult(
-      newBoard: resetBoard,
-      gainedScore: gainedScore,
-      moved: gainedScore > 0, // Simplified; should check if any tile actually moved
-      isGameOver: isGameOver,
-    );
+  final Board baseBoard = resetMergeFlags();
+
+  final newCells = List<Tile>.from(baseBoard.cells);
+
+  Tile tileAtRC(int row, int col) => newCells[index(row, col)];
+  void setTileRC(int row, int col, Tile tile) {
+    newCells[index(row, col)] = tile;
   }
 
-  /// Returns true if there is at least one legal move (for game over check).
-  bool hasMovesLeft() {
-    // TODO: implement:
-    // - If any tile is empty => true
-    for (var r = 0; r < size; r++) {
-      for (var c = 0; c < size; c++) {
-        if (tileAt(r, c).isEmpty) {
-          return true;
-        }
-      }
-    }
-    // - Else, if any adjacent tiles can merge => true
-    for (var r = 0; r < size; r++) {
-      for (var c = 0; c < size; c++) {
-        final currentTile = tileAt(r, c);
-        // Check right
-        if (c < size - 1) {
-          final rightTile = tileAt(r, c + 1);
-          if (currentTile.value == rightTile.value) {
-            return true;
-          }
-        }
-        // Check down
-        if (r < size - 1) {
-          final downTile = tileAt(r + 1, c);
-          if (currentTile.value == downTile.value) {
-            return true;
+  bool isEmpty(Tile t) => t.isEmpty; 
+
+  switch (direction) {
+    case Direction.up:
+      for (var j = 0; j < size; ++j) {
+        for (var i = size - 1; i >= 1; --i) {
+          final current = tileAtRC(i, j);
+          if (isEmpty(current)) continue;
+
+          switch (mergeMode) {
+            case MergeMode.classic:
+              final above = tileAtRC(i - 1, j);
+
+              if (isEmpty(above)) {
+                setTileRC(i - 1, j, current);
+                setTileRC(i, j, const Tile.empty());
+                moved = true;
+                i = size - 1;
+              } else if (above.value == current.value && !current.mergedThisMove) {
+                final mergedValue = current.value * 2;
+                gainedScore += mergedValue;
+                setTileRC(
+                  i - 1,
+                  j,
+                  above.copyWith(
+                    value: mergedValue,
+                    mergedThisMove: true,
+                  ),
+                );
+                setTileRC(i, j, const Tile.empty());
+                moved = true;
+                i = size - 1;
+              }
+              break;
+
+            case MergeMode.cascade:
+              final above = tileAtRC(i - 1, j);
+
+              if (isEmpty(above)) {
+                setTileRC(i - 1, j, current);
+                setTileRC(i, j, const Tile.empty());
+                moved = true;
+                i = size - 1;
+              } else if (above.value == current.value) {
+                final mergedValue = current.value * 2;
+                gainedScore += mergedValue;
+                setTileRC(
+                  i - 1,
+                  j,
+                  above.copyWith(value: mergedValue),
+                );
+                setTileRC(i, j, const Tile.empty());
+                moved = true;
+                i = size - 1;
+              }
+              break;
           }
         }
       }
-    }
-    // - Otherwise => false
-    return false;
+      break;
+
+    case Direction.down:
+      for (var j = 0; j < size; ++j) {
+        for (var i = 0; i < size - 1; ++i) {
+          final current = tileAtRC(i, j);
+          if (isEmpty(current)) continue;
+
+          switch (mergeMode) {
+            case MergeMode.classic:
+              final below = tileAtRC(i + 1, j);
+
+              if (isEmpty(below)) {
+                setTileRC(i + 1, j, current);
+                setTileRC(i, j, const Tile.empty());
+                moved = true;
+                i = 0;
+              } else if (below.value == current.value && !current.mergedThisMove) {
+                final mergedValue = current.value * 2;
+                gainedScore += mergedValue;
+                setTileRC(
+                  i + 1,
+                  j,
+                  below.copyWith(
+                    value: mergedValue,
+                    mergedThisMove: true,
+                  ),
+                );
+                setTileRC(i, j, const Tile.empty());
+                moved = true;
+                i = 0;
+              }
+              break;
+
+            case MergeMode.cascade:
+              final below = tileAtRC(i + 1, j);
+
+              if (isEmpty(below)) {
+                setTileRC(i + 1, j, current);
+                setTileRC(i, j, const Tile.empty());
+                moved = true;
+                i = 0;
+              } else if (below.value == current.value) {
+                final mergedValue = current.value * 2;
+                gainedScore += mergedValue;
+                setTileRC(
+                  i + 1,
+                  j,
+                  below.copyWith(value: mergedValue),
+                );
+                setTileRC(i, j, const Tile.empty());
+                moved = true;
+                i = 0;
+              }
+              break;
+          }
+        }
+      }
+      break;
+
+    case Direction.left:
+      for (var i = 0; i < size; ++i) {
+        for (var j = size - 1; j >= 1; --j) {
+          final current = tileAtRC(i, j);
+          if (isEmpty(current)) continue;
+
+          switch (mergeMode) {
+            case MergeMode.classic:
+              final left = tileAtRC(i, j - 1);
+
+              if (isEmpty(left)) {
+                setTileRC(i, j - 1, current);
+                setTileRC(i, j, const Tile.empty());
+                moved = true;
+                j = size - 1;
+              } else if (left.value == current.value && !current.mergedThisMove) {
+                final mergedValue = current.value * 2;
+                gainedScore += mergedValue;
+                setTileRC(
+                  i,
+                  j - 1,
+                  left.copyWith(
+                    value: mergedValue,
+                    mergedThisMove: true,
+                  ),
+                );
+                setTileRC(i, j, const Tile.empty());
+                moved = true;
+                j = size - 1;
+              }
+              break;
+
+            case MergeMode.cascade:
+              final left = tileAtRC(i, j - 1);
+
+              if (isEmpty(left)) {
+                setTileRC(i, j - 1, current);
+                setTileRC(i, j, const Tile.empty());
+                moved = true;
+                j = size - 1;
+              } else if (left.value == current.value) {
+                final mergedValue = current.value * 2;
+                gainedScore += mergedValue;
+                setTileRC(
+                  i,
+                  j - 1,
+                  left.copyWith(value: mergedValue),
+                );
+                setTileRC(i, j, const Tile.empty());
+                moved = true;
+                j = size - 1;
+              }
+              break;
+          }
+        }
+      }
+      break;
+
+    case Direction.right:
+      for (var i = 0; i < size; ++i) {
+        for (var j = 0; j < size - 1; ++j) {
+          final current = tileAtRC(i, j);
+          if (isEmpty(current)) continue;
+
+          switch (mergeMode) {
+            case MergeMode.classic:
+              final right = tileAtRC(i, j + 1);
+
+              if (isEmpty(right)) {
+                setTileRC(i, j + 1, current);
+                setTileRC(i, j, const Tile.empty());
+                moved = true;
+                j = 0;
+              } else if (right.value == current.value && !current.mergedThisMove) {
+                final mergedValue = current.value * 2;
+                gainedScore += mergedValue;
+                setTileRC(
+                  i,
+                  j + 1,
+                  right.copyWith(
+                    value: mergedValue,
+                    mergedThisMove: true,
+                  ),
+                );
+                setTileRC(i, j, const Tile.empty());
+                moved = true;
+                j = 0;
+              }
+              break;
+
+            case MergeMode.cascade:
+              final right = tileAtRC(i, j + 1);
+
+              if (isEmpty(right)) {
+                setTileRC(i, j + 1, current);
+                setTileRC(i, j, const Tile.empty());
+                moved = true;
+                j = 0;
+              } else if (right.value == current.value) {
+                final mergedValue = current.value * 2;
+                gainedScore += mergedValue;
+                setTileRC(
+                  i,
+                  j + 1,
+                  right.copyWith(value: mergedValue),
+                );
+                setTileRC(i, j, const Tile.empty());
+                moved = true;
+                j = 0;
+              }
+              break;
+          }
+        }
+      }
+      break;
   }
 
-  /// Simple debug print of the board.
+  Board movedBoard = Board(size: size, cells: newCells);
+  final newBoard = movedBoard.spawnRandomTile();
+  final isGameOver = !newBoard.hasMovesLeft();
+
+  return MoveResult(
+    newBoard: newBoard,
+    gainedScore: gainedScore,
+    moved: moved,
+    isGameOver: isGameOver,
+  );
+}
+
+bool hasMovesLeft() {
+  for (final tile in cells) {
+    if (tile.isEmpty) {
+      return true;
+    }
+  }
+
+  for (var row = 0; row < size; row++) {
+    for (var col = 0; col < size - 1; col++) {
+      if (tileAt(row, col).value == tileAt(row, col + 1).value) {
+        return true;
+      }
+    }
+  }
+
+  for (var row = 0; row < size - 1; row++) {
+    for (var col = 0; col < size; col++) {
+      if (tileAt(row, col).value == tileAt(row + 1, col).value) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
   @override
   String toString() {
     final buffer = StringBuffer();
