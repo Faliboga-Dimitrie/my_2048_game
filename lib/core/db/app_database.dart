@@ -16,7 +16,18 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 1; // was 1
+
+  // @override
+  // MigrationStrategy get migration => MigrationStrategy(
+  //       onCreate: (m) => m.createAll(),
+  //       onUpgrade: (m, from, to) async {
+  //         if (from == 1) {
+  //           await m.addColumn(games, games.boardSize as GeneratedColumn<Object>);
+  //           await m.addColumn(games, games.mergeMode as GeneratedColumn<Object>);
+  //         }
+  //       },
+  //     );
 
   // ---------------- USER QUERIES ----------------
 

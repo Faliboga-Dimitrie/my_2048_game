@@ -1,19 +1,69 @@
 import 'package:flutter/material.dart';
-import 'package:my_2048_game/features/local_play/provider/user_provider.dart';
+import 'package:my_2048_game/features/game/view/board_screen.dart';
+import 'package:my_2048_game/features/game/view_model/board_vm.dart';
+import 'package:my_2048_game/features/game/model/board.dart';
+import 'package:my_2048_game/core/db/app_database.dart';
+import 'package:my_2048_game/features/home/Widget/saved_games_sheet.dart';
+import 'package:my_2048_game/features/home/view_model/home_vm.dart';
 import 'package:provider/provider.dart';
 
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
-  @override
-  State<HomeScreen> createState() => _HomeScreenState();
-}
+  Future<void> _handleStartNewGame(BuildContext context) async {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const GameBoardScreen(),
+      ),
+    );
+  }
 
-class _HomeScreenState extends State<HomeScreen> {
+  Future<void> _handleLoadSavedGame(BuildContext context) async {
+    final homeVm = context.read<HomeViewModel>();
+    final db = context.read<AppDatabase>();
+
+    final games = await homeVm.loadSavedGamesForCurrentUser();
+
+    if (!context.mounted) return;
+
+    if (games.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No saved games found')),
+      );
+      return;
+    }
+
+    final selectedGame = await showModalBottomSheet<Game>(
+      context: context,
+      builder: (_) => SavedGamesSheet(games: games, homeVm: homeVm),
+    );
+
+    if (selectedGame == null) {
+      return;
+    }
+
+    final boardVm = BoardViewModel(
+      db: db,
+      userId: selectedGame.userId,
+      mergeMode: MergeMode.classic,
+      initialGame: selectedGame,
+      initialSize: 4, // match your serialize/deserialize assumptions
+    );
+
+    if (!context.mounted) return;
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => GameBoardScreen(viewModel: boardVm),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final user = context.watch<UserSession>().currentUser;
-    final username = user?.username ?? 'Guest';
+    final homeVm = context.watch<HomeViewModel>();
+    final username = homeVm.currentUser?.username ?? 'mock_user';
 
     return Scaffold(
       appBar: AppBar(
@@ -33,18 +83,14 @@ class _HomeScreenState extends State<HomeScreen> {
                   children: [
                     const Text(
                       'Game',
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      style:
+                          TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 16),
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
-                        onPressed: () {
-                          Navigator.pushReplacementNamed(
-                            context,
-                            '/game',
-                          );
-                        },
+                        onPressed: () => _handleStartNewGame(context),
                         child: const Text('Start New Game'),
                       ),
                     ),
@@ -52,9 +98,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
-                        onPressed: () {
-                          // Load saved game
-                        },
+                        onPressed: () => _handleLoadSavedGame(context),
                         child: const Text('Load Saved Game'),
                       ),
                     ),
@@ -62,8 +106,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
             ),
-            
-            // Statistics Section
+
+            // Statistics Section (still mock for now, can be wired to VM later)
             Card(
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
@@ -71,27 +115,31 @@ class _HomeScreenState extends State<HomeScreen> {
                   children: [
                     Text(
                       '$username\'s Statistics',
-                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                          fontSize: 20, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 16),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
+                      children: const [
                         Column(
-                          children: const [
-                            Text('Best Score', style: TextStyle(fontWeight: FontWeight.w500)),
+                          children: [
+                            Text('Best Score',
+                                style: TextStyle(fontWeight: FontWeight.w500)),
                             Text('0', style: TextStyle(fontSize: 18)),
                           ],
                         ),
                         Column(
-                          children: const [
-                            Text('Games Played', style: TextStyle(fontWeight: FontWeight.w500)),
+                          children: [
+                            Text('Games Played',
+                                style: TextStyle(fontWeight: FontWeight.w500)),
                             Text('0', style: TextStyle(fontSize: 18)),
                           ],
                         ),
                         Column(
-                          children: const [
-                            Text('Games Won', style: TextStyle(fontWeight: FontWeight.w500)),
+                          children: [
+                            Text('Games Won',
+                                style: TextStyle(fontWeight: FontWeight.w500)),
                             Text('0', style: TextStyle(fontSize: 18)),
                           ],
                         ),
@@ -101,7 +149,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
             ),
-            
+
             // Leaderboard Section
             Card(
               child: Padding(

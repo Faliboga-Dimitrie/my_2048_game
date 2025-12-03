@@ -8,7 +8,8 @@ import 'package:my_2048_game/features/local_play/provider/user_provider.dart';
 import 'package:provider/provider.dart';
 
 class GameBoardScreen extends StatefulWidget {
-  const GameBoardScreen({super.key});
+  final BoardViewModel? viewModel;
+  const GameBoardScreen({super.key, this.viewModel});
 
   @override
   State<GameBoardScreen> createState() => _GameBoardScreenState();
@@ -21,11 +22,41 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
   GameMode _selectedMode = GameMode.classic;
 
   @override
+  void initState() {
+    super.initState();
+
+    // If a VM is passed from outside (e.g. load saved game),
+    // use it and immediately wire up the gyroscope.
+    if (widget.viewModel != null) {
+      _viewModel = widget.viewModel;
+      _setupGyroForCurrentViewModel();
+    }
+  }
+
+  @override
   void dispose() {
     _sizeController.dispose();
     _viewModel?.dispose();
     _gyroVM?.dispose();
     super.dispose();
+  }
+
+  void _setupGyroForCurrentViewModel() {
+    _gyroVM?.dispose();
+    final vm = _viewModel;
+    if (vm == null) return;
+
+    final gyro = GyroInputViewModel();
+
+    gyro.addListener(() {
+      final dir = gyro.lastDirection;
+      if (dir != null && !vm.isGameOver) {
+        vm.onMove(dir);
+      }
+    });
+
+    gyro.start();
+    _gyroVM = gyro;
   }
 
   Future<void> _startGame() async {
@@ -86,7 +117,7 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
   @override
   Widget build(BuildContext context) {
     final session = context.watch<UserSession>();
-    final username = session.currentUser?.username ?? 'Unknown';
+    final username = session.currentUser?.username ?? 'mock_user';
 
     // STEP 1: if no viewModel yet, ask for board size
     if (_viewModel == null) {

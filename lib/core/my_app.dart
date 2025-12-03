@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:my_2048_game/core/db/app_database.dart';
 import 'package:my_2048_game/debug/debug_database_screen.dart';
 import 'package:my_2048_game/features/game/view/board_screen.dart';
 import 'package:my_2048_game/features/home/view/home.dart';
 import 'package:my_2048_game/core/welcome.dart';
 import 'package:my_2048_game/features/auth/view/login_view.dart';
 import 'package:my_2048_game/features/auth/view/register_view.dart';
+import 'package:my_2048_game/features/home/view_model/home_vm.dart';
+import 'package:my_2048_game/features/local_play/provider/user_provider.dart';
 import 'package:my_2048_game/features/local_play/view/local_player_view.dart';
+import 'package:provider/provider.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -20,7 +24,13 @@ class MyApp extends StatelessWidget {
         '/': (context) => const WelcomeScreen(),
         '/login': (context) => const LoginPage(),
         '/register': (context) => const RegisterScreen(),
-        '/home': (context) => const HomeScreen(),
+        '/home': (context) => ChangeNotifierProvider(
+        create: (ctx) => HomeViewModel(
+          db: ctx.read<AppDatabase>(),
+          userSession: ctx.read<UserSession>(),
+        ),
+        child: const HomeScreen(),
+      ),
         '/local_play': (context) => const LocalUserScreen(),
         '/debug-db': (context) => const DebugDatabaseScreen(),
         '/game': (context) => const GameBoardScreen(),
