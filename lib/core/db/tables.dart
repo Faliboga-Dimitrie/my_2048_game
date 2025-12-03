@@ -16,12 +16,12 @@ class Games extends Table {
   IntColumn get score => integer().withDefault(const Constant(0))();
   IntColumn get moveCount => integer().withDefault(const Constant(0))();
 
-  // // NEW: store board size (e.g. 4, 5, 6…)
-  // IntColumn get boardSize => integer().withDefault(const Constant(4))();
+  // NEW: store board size (e.g. 4, 5, 6…)
+  IntColumn get boardSize => integer().withDefault(const Constant(4))();
 
-  // // NEW: store merge mode as enum index (0 = classic, 1 = cascade)
-  // IntColumn get mergeMode =>
-  //     integer().withDefault(const Constant(0))(); // 0 = classic
+  // NEW: store merge mode as enum index (0 = classic, 1 = cascade)
+  IntColumn get mergeMode =>
+      integer().withDefault(const Constant(0))(); // 0 = classic
 
   DateTimeColumn get createdAt =>
       dateTime().withDefault(currentDateAndTime)();

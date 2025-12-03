@@ -16,9 +16,12 @@ class GameBoardScreen extends StatefulWidget {
 }
 
 class _GameBoardScreenState extends State<GameBoardScreen> {
-  final TextEditingController _sizeController = TextEditingController(text: '4');
+  final TextEditingController _sizeController = TextEditingController(
+    text: '4',
+  );
   BoardViewModel? _viewModel;
   GyroInputViewModel? _gyroVM;
+  bool _hasShownGameOverDialog = false;
   GameMode _selectedMode = GameMode.classic;
 
   @override
@@ -61,7 +64,9 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
 
   Future<void> _startGame() async {
     final db = context.read<AppDatabase>();
-    final user = db.getUserByUsername(context.read<UserSession>().currentUser!.username);
+    final user = db.getUserByUsername(
+      context.read<UserSession>().currentUser!.username,
+    );
     final parsed = int.tryParse(_sizeController.text) ?? 4;
     final size = parsed.clamp(2, 8);
 
@@ -69,9 +74,9 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
 
     if (userId == null) {
       // This should not happen, as we come from local user selection
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Error: User not found')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Error: User not found')));
       return;
     }
 
@@ -104,6 +109,76 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
     });
   }
 
+  Future<void> _showGameOverDialog(BoardViewModel vm) async {
+    // Prevent re-entrancy just in case
+    if (!vm.isGameOver) return;
+
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: const Text(
+            'Game Over',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Score: ${vm.score}',
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Moves: ${vm.moveCount}', // if you track this; otherwise remove
+                style: const TextStyle(fontSize: 16),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Nice try!',
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () async {
+                Navigator.of(context).pop(); // close dialog
+
+                // Reset flag so we can show dialog for the next game too
+                setState(() {
+                  _hasShownGameOverDialog = false;
+                });
+
+                await vm.newGame();
+
+                // Reset the gyro as you already do in the AppBar action
+                _gyroVM?.stop();
+                _gyroVM?.start();
+              },
+              child: const Text('Play Again'),
+            ),
+            FilledButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // close dialog
+                // Navigate back to HomeScreen
+                Navigator.of(context).pop(); // assuming this screen was pushed
+              },
+              child: const Text('Back to Home'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   void _resetSizeSelection() {
     _viewModel?.dispose();
     _gyroVM?.dispose();
@@ -113,7 +188,6 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
     setState(() {});
   }
 
-
   @override
   Widget build(BuildContext context) {
     final session = context.watch<UserSession>();
@@ -121,90 +195,94 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
 
     // STEP 1: if no viewModel yet, ask for board size
     if (_viewModel == null) {
-  return Scaffold(
-    appBar: AppBar(
-      title: const Text('Choose Game Settings'),
-    ),
-    body: Center(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 340),
-        child: Card(
-          margin: const EdgeInsets.all(16),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  'Player: $username',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
+      return Scaffold(
+        appBar: AppBar(title: const Text('Choose Game Settings')),
+        body: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 340),
+            child: Card(
+              margin: const EdgeInsets.all(16),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      'Player: $username',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
 
-                const SizedBox(height: 16),
+                    const SizedBox(height: 16),
 
-                // ==== BOARD SIZE ====
-                const Text(
-                  'Board Size',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: _sizeController,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                    labelText: 'Size (e.g. 4)',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
+                    // ==== BOARD SIZE ====
+                    const Text(
+                      'Board Size',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: _sizeController,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        labelText: 'Size (e.g. 4)',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
 
-                const SizedBox(height: 24),
+                    const SizedBox(height: 24),
 
-                // ==== GAME MODE ====
-                const Text(
-                  'Game Mode',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 8),
+                    // ==== GAME MODE ====
+                    const Text(
+                      'Game Mode',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
 
-                RadioListTile<GameMode>(
-                  value: GameMode.classic,
-                  groupValue: _selectedMode,
-                  title: const Text("Classic"),
-                  onChanged: (v) {
-                    setState(() => _selectedMode = v!);
-                  },
-                ),
-                RadioListTile<GameMode>(
-                  value: GameMode.cascade,
-                  groupValue: _selectedMode,
-                  title: const Text("Cascade"),
-                  onChanged: (v) {
-                    setState(() => _selectedMode = v!);
-                  },
-                ),
+                    RadioListTile<GameMode>(
+                      value: GameMode.classic,
+                      groupValue: _selectedMode,
+                      title: const Text("Classic"),
+                      onChanged: (v) {
+                        setState(() => _selectedMode = v!);
+                      },
+                    ),
+                    RadioListTile<GameMode>(
+                      value: GameMode.cascade,
+                      groupValue: _selectedMode,
+                      title: const Text("Cascade"),
+                      onChanged: (v) {
+                        setState(() => _selectedMode = v!);
+                      },
+                    ),
 
-                const SizedBox(height: 24),
+                    const SizedBox(height: 24),
 
-                // ==== START GAME BUTTON ====
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: _startGame,
-                    child: const Text('Start Game'),
-                  ),
+                    // ==== START GAME BUTTON ====
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: _startGame,
+                        child: const Text('Start Game'),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
         ),
-      ),
-    ),
-  );
-}
+      );
+    }
     // STEP 2: once we have a viewModel, render the board
     final vm = _viewModel!;
 
@@ -232,6 +310,14 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
       body: AnimatedBuilder(
         animation: vm,
         builder: (context, _) {
+          // Show dialog once when game transitions to game over
+          if (vm.isGameOver && !_hasShownGameOverDialog) {
+            _hasShownGameOverDialog = true;
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              _showGameOverDialog(vm);
+            });
+          }
+
           return Column(
             children: [
               Padding(
@@ -278,8 +364,7 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
                     aspectRatio: 1,
                     child: _BoardView(
                       board: vm.board,
-                      // You no longer need onMove here if you ONLY use gyro.
-                      // You could still keep swipe as backup:
+                      //Swipe is only a backup in case gyroscope is too sensitive
                       onMove: vm.onMove,
                     ),
                   ),
@@ -296,10 +381,7 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
 /// Separate widget for the board grid.
 /// It wraps the grid in a GestureDetector so you can use swipe input later.
 class _BoardView extends StatelessWidget {
-  const _BoardView({
-    required this.board,
-    required this.onMove,
-  });
+  const _BoardView({required this.board, required this.onMove});
 
   final Board board;
   final void Function(Direction) onMove;

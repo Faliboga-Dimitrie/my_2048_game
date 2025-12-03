@@ -29,7 +29,7 @@ class BoardViewModel extends ChangeNotifier {
         _isGameOver = false, // you can also read this from game if you add a flag
         _currentGameRow = initialGame,
         _board = initialGame != null
-            ? deserializeBoard(initialGame.boardState, size: 4) // or store size in DB
+            ? deserializeBoard(initialGame.boardState, size: initialGame.boardSize) // or store size in DB
             : Board.empty(size: initialSize);
 
   Board get board => _board;
@@ -55,6 +55,8 @@ class BoardViewModel extends ChangeNotifier {
       boardState: boardState,
       score: _score,
       moveCount: _moveCount,
+      boardSize: _board.size,
+      mergeModeIndex: _mergeMode.index,
     );
 
     // Build in-memory Game row (Drift's Game class)
@@ -64,6 +66,8 @@ class BoardViewModel extends ChangeNotifier {
       boardState: boardState,
       score: _score,
       moveCount: _moveCount,
+      boardSize: _board.size,
+      mergeMode: _mergeMode.index,
       createdAt: DateTime.now(),
       lastPlayedAt: DateTime.now(),
     );
@@ -100,6 +104,8 @@ class BoardViewModel extends ChangeNotifier {
       userId: _currentGameRow!.userId,
       boardState: boardState,
       score: _score,
+      boardSize: _board.size,
+      mergeMode: _mergeMode.index,
       moveCount: _moveCount,
       createdAt: _currentGameRow!.createdAt,
       lastPlayedAt: DateTime.now(),

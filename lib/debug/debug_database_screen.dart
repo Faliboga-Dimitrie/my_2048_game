@@ -12,7 +12,7 @@ class DebugDatabaseScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Database Debug'),
+        title: const Text('Local Players'),
       ),
       body: FutureBuilder<_DbSnapshot>(
         future: _loadSnapshot(db),
@@ -46,7 +46,7 @@ class DebugDatabaseScreen extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'User: ${user.username} (id: ${user.id})',
+                        'User: ${user.username}',
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
                         ),

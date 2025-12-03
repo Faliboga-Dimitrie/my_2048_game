@@ -12,7 +12,7 @@ class GyroInputViewModel extends ChangeNotifier {
   Direction? _lastDirection;
 
   GyroInputViewModel({
-    this.tiltThreshold = 0.8,
+    this.tiltThreshold = 0.5,
     this.cooldown = const Duration(milliseconds: 400),
   });
 
@@ -66,8 +66,8 @@ class GyroInputViewModel extends ChangeNotifier {
       final isOpposite = _isOpposite(dir, _lastDirection!);
       if (isOpposite) {
         // Require a stronger tilt for the opposite move
-        final strongTilt = (x.abs() > tiltThreshold * 1.5) ||
-                           (y.abs() > tiltThreshold * 1.5);
+        final strongTilt = (x.abs() > tiltThreshold * 4.0) ||
+                           (y.abs() > tiltThreshold * 5.5);
         if (!strongTilt) {
           return;
         }

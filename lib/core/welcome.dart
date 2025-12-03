@@ -6,13 +6,13 @@ class WelcomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Welcome to 2048 Demo')),
+      appBar: AppBar(title: const Text('Welcome to 2048')),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Text(
-              'What do you want to do?:',
+              'Let\'s get started!:',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 20), 
@@ -30,7 +30,7 @@ class WelcomeScreen extends StatelessWidget {
             ),
             ElevatedButton(
               onPressed: () => Navigator.pushNamed(context, '/debug-db'),
-              child: const Text('4. Debug Database'),
+              child: const Text('4. See local players'), // named like this so the debug screen is not obvious
             ),
           ],
         ),

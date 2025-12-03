@@ -16,18 +16,18 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 1; // was 1
+  int get schemaVersion => 2; // was 1
 
-  // @override
-  // MigrationStrategy get migration => MigrationStrategy(
-  //       onCreate: (m) => m.createAll(),
-  //       onUpgrade: (m, from, to) async {
-  //         if (from == 1) {
-  //           await m.addColumn(games, games.boardSize as GeneratedColumn<Object>);
-  //           await m.addColumn(games, games.mergeMode as GeneratedColumn<Object>);
-  //         }
-  //       },
-  //     );
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+        onCreate: (m) => m.createAll(),
+        onUpgrade: (m, from, to) async {
+          if (from == 1) {
+            await m.addColumn(games, games.boardSize );
+            await m.addColumn(games, games.mergeMode );
+          }
+        },
+      );
 
   // ---------------- USER QUERIES ----------------
 
@@ -51,6 +51,8 @@ class AppDatabase extends _$AppDatabase {
     required String boardState,
     required int score,
     required int moveCount,
+    required int boardSize,
+    required int mergeModeIndex,
   }) {
     return into(games).insert(
       GamesCompanion.insert(
@@ -58,14 +60,20 @@ class AppDatabase extends _$AppDatabase {
         boardState: boardState,
         score: Value(score),
         moveCount: Value(moveCount),
+        boardSize: Value(boardSize),
+        mergeMode: Value(mergeModeIndex),
       ),
     );
   }
 
   Future<List<Game>> getGamesForUser(int userId) {
-    return (select(games)..where((g) => g.userId.equals(userId))).get();
+    return (select(games)
+          ..where((g) => g.userId.equals(userId))
+          ..orderBy([
+            (g) => OrderingTerm(expression: g.lastPlayedAt, mode: OrderingMode.desc),
+          ]))
+        .get();
   }
-
   Future<bool> updateGame(Game game) => update(games).replace(game);
 
   Future<int> deleteGame(int id) =>

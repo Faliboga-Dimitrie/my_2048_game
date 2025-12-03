@@ -258,6 +258,30 @@ class $GamesTable extends Games with TableInfo<$GamesTable, Game> {
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
+  static const VerificationMeta _boardSizeMeta = const VerificationMeta(
+    'boardSize',
+  );
+  @override
+  late final GeneratedColumn<int> boardSize = GeneratedColumn<int>(
+    'board_size',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(4),
+  );
+  static const VerificationMeta _mergeModeMeta = const VerificationMeta(
+    'mergeMode',
+  );
+  @override
+  late final GeneratedColumn<int> mergeMode = GeneratedColumn<int>(
+    'merge_mode',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -289,6 +313,8 @@ class $GamesTable extends Games with TableInfo<$GamesTable, Game> {
     boardState,
     score,
     moveCount,
+    boardSize,
+    mergeMode,
     createdAt,
     lastPlayedAt,
   ];
@@ -335,6 +361,18 @@ class $GamesTable extends Games with TableInfo<$GamesTable, Game> {
         moveCount.isAcceptableOrUnknown(data['move_count']!, _moveCountMeta),
       );
     }
+    if (data.containsKey('board_size')) {
+      context.handle(
+        _boardSizeMeta,
+        boardSize.isAcceptableOrUnknown(data['board_size']!, _boardSizeMeta),
+      );
+    }
+    if (data.containsKey('merge_mode')) {
+      context.handle(
+        _mergeModeMeta,
+        mergeMode.isAcceptableOrUnknown(data['merge_mode']!, _mergeModeMeta),
+      );
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -379,6 +417,14 @@ class $GamesTable extends Games with TableInfo<$GamesTable, Game> {
         DriftSqlType.int,
         data['${effectivePrefix}move_count'],
       )!,
+      boardSize: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}board_size'],
+      )!,
+      mergeMode: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}merge_mode'],
+      )!,
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -402,6 +448,8 @@ class Game extends DataClass implements Insertable<Game> {
   final String boardState;
   final int score;
   final int moveCount;
+  final int boardSize;
+  final int mergeMode;
   final DateTime createdAt;
   final DateTime lastPlayedAt;
   const Game({
@@ -410,6 +458,8 @@ class Game extends DataClass implements Insertable<Game> {
     required this.boardState,
     required this.score,
     required this.moveCount,
+    required this.boardSize,
+    required this.mergeMode,
     required this.createdAt,
     required this.lastPlayedAt,
   });
@@ -421,6 +471,8 @@ class Game extends DataClass implements Insertable<Game> {
     map['board_state'] = Variable<String>(boardState);
     map['score'] = Variable<int>(score);
     map['move_count'] = Variable<int>(moveCount);
+    map['board_size'] = Variable<int>(boardSize);
+    map['merge_mode'] = Variable<int>(mergeMode);
     map['created_at'] = Variable<DateTime>(createdAt);
     map['last_played_at'] = Variable<DateTime>(lastPlayedAt);
     return map;
@@ -433,6 +485,8 @@ class Game extends DataClass implements Insertable<Game> {
       boardState: Value(boardState),
       score: Value(score),
       moveCount: Value(moveCount),
+      boardSize: Value(boardSize),
+      mergeMode: Value(mergeMode),
       createdAt: Value(createdAt),
       lastPlayedAt: Value(lastPlayedAt),
     );
@@ -449,6 +503,8 @@ class Game extends DataClass implements Insertable<Game> {
       boardState: serializer.fromJson<String>(json['boardState']),
       score: serializer.fromJson<int>(json['score']),
       moveCount: serializer.fromJson<int>(json['moveCount']),
+      boardSize: serializer.fromJson<int>(json['boardSize']),
+      mergeMode: serializer.fromJson<int>(json['mergeMode']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       lastPlayedAt: serializer.fromJson<DateTime>(json['lastPlayedAt']),
     );
@@ -462,6 +518,8 @@ class Game extends DataClass implements Insertable<Game> {
       'boardState': serializer.toJson<String>(boardState),
       'score': serializer.toJson<int>(score),
       'moveCount': serializer.toJson<int>(moveCount),
+      'boardSize': serializer.toJson<int>(boardSize),
+      'mergeMode': serializer.toJson<int>(mergeMode),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'lastPlayedAt': serializer.toJson<DateTime>(lastPlayedAt),
     };
@@ -473,6 +531,8 @@ class Game extends DataClass implements Insertable<Game> {
     String? boardState,
     int? score,
     int? moveCount,
+    int? boardSize,
+    int? mergeMode,
     DateTime? createdAt,
     DateTime? lastPlayedAt,
   }) => Game(
@@ -481,6 +541,8 @@ class Game extends DataClass implements Insertable<Game> {
     boardState: boardState ?? this.boardState,
     score: score ?? this.score,
     moveCount: moveCount ?? this.moveCount,
+    boardSize: boardSize ?? this.boardSize,
+    mergeMode: mergeMode ?? this.mergeMode,
     createdAt: createdAt ?? this.createdAt,
     lastPlayedAt: lastPlayedAt ?? this.lastPlayedAt,
   );
@@ -493,6 +555,8 @@ class Game extends DataClass implements Insertable<Game> {
           : this.boardState,
       score: data.score.present ? data.score.value : this.score,
       moveCount: data.moveCount.present ? data.moveCount.value : this.moveCount,
+      boardSize: data.boardSize.present ? data.boardSize.value : this.boardSize,
+      mergeMode: data.mergeMode.present ? data.mergeMode.value : this.mergeMode,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       lastPlayedAt: data.lastPlayedAt.present
           ? data.lastPlayedAt.value
@@ -508,6 +572,8 @@ class Game extends DataClass implements Insertable<Game> {
           ..write('boardState: $boardState, ')
           ..write('score: $score, ')
           ..write('moveCount: $moveCount, ')
+          ..write('boardSize: $boardSize, ')
+          ..write('mergeMode: $mergeMode, ')
           ..write('createdAt: $createdAt, ')
           ..write('lastPlayedAt: $lastPlayedAt')
           ..write(')'))
@@ -521,6 +587,8 @@ class Game extends DataClass implements Insertable<Game> {
     boardState,
     score,
     moveCount,
+    boardSize,
+    mergeMode,
     createdAt,
     lastPlayedAt,
   );
@@ -533,6 +601,8 @@ class Game extends DataClass implements Insertable<Game> {
           other.boardState == this.boardState &&
           other.score == this.score &&
           other.moveCount == this.moveCount &&
+          other.boardSize == this.boardSize &&
+          other.mergeMode == this.mergeMode &&
           other.createdAt == this.createdAt &&
           other.lastPlayedAt == this.lastPlayedAt);
 }
@@ -543,6 +613,8 @@ class GamesCompanion extends UpdateCompanion<Game> {
   final Value<String> boardState;
   final Value<int> score;
   final Value<int> moveCount;
+  final Value<int> boardSize;
+  final Value<int> mergeMode;
   final Value<DateTime> createdAt;
   final Value<DateTime> lastPlayedAt;
   const GamesCompanion({
@@ -551,6 +623,8 @@ class GamesCompanion extends UpdateCompanion<Game> {
     this.boardState = const Value.absent(),
     this.score = const Value.absent(),
     this.moveCount = const Value.absent(),
+    this.boardSize = const Value.absent(),
+    this.mergeMode = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.lastPlayedAt = const Value.absent(),
   });
@@ -560,6 +634,8 @@ class GamesCompanion extends UpdateCompanion<Game> {
     required String boardState,
     this.score = const Value.absent(),
     this.moveCount = const Value.absent(),
+    this.boardSize = const Value.absent(),
+    this.mergeMode = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.lastPlayedAt = const Value.absent(),
   }) : userId = Value(userId),
@@ -570,6 +646,8 @@ class GamesCompanion extends UpdateCompanion<Game> {
     Expression<String>? boardState,
     Expression<int>? score,
     Expression<int>? moveCount,
+    Expression<int>? boardSize,
+    Expression<int>? mergeMode,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? lastPlayedAt,
   }) {
@@ -579,6 +657,8 @@ class GamesCompanion extends UpdateCompanion<Game> {
       if (boardState != null) 'board_state': boardState,
       if (score != null) 'score': score,
       if (moveCount != null) 'move_count': moveCount,
+      if (boardSize != null) 'board_size': boardSize,
+      if (mergeMode != null) 'merge_mode': mergeMode,
       if (createdAt != null) 'created_at': createdAt,
       if (lastPlayedAt != null) 'last_played_at': lastPlayedAt,
     });
@@ -590,6 +670,8 @@ class GamesCompanion extends UpdateCompanion<Game> {
     Value<String>? boardState,
     Value<int>? score,
     Value<int>? moveCount,
+    Value<int>? boardSize,
+    Value<int>? mergeMode,
     Value<DateTime>? createdAt,
     Value<DateTime>? lastPlayedAt,
   }) {
@@ -599,6 +681,8 @@ class GamesCompanion extends UpdateCompanion<Game> {
       boardState: boardState ?? this.boardState,
       score: score ?? this.score,
       moveCount: moveCount ?? this.moveCount,
+      boardSize: boardSize ?? this.boardSize,
+      mergeMode: mergeMode ?? this.mergeMode,
       createdAt: createdAt ?? this.createdAt,
       lastPlayedAt: lastPlayedAt ?? this.lastPlayedAt,
     );
@@ -622,6 +706,12 @@ class GamesCompanion extends UpdateCompanion<Game> {
     if (moveCount.present) {
       map['move_count'] = Variable<int>(moveCount.value);
     }
+    if (boardSize.present) {
+      map['board_size'] = Variable<int>(boardSize.value);
+    }
+    if (mergeMode.present) {
+      map['merge_mode'] = Variable<int>(mergeMode.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -639,6 +729,8 @@ class GamesCompanion extends UpdateCompanion<Game> {
           ..write('boardState: $boardState, ')
           ..write('score: $score, ')
           ..write('moveCount: $moveCount, ')
+          ..write('boardSize: $boardSize, ')
+          ..write('mergeMode: $mergeMode, ')
           ..write('createdAt: $createdAt, ')
           ..write('lastPlayedAt: $lastPlayedAt')
           ..write(')'))
@@ -783,6 +875,8 @@ typedef $$GamesTableCreateCompanionBuilder =
       required String boardState,
       Value<int> score,
       Value<int> moveCount,
+      Value<int> boardSize,
+      Value<int> mergeMode,
       Value<DateTime> createdAt,
       Value<DateTime> lastPlayedAt,
     });
@@ -793,6 +887,8 @@ typedef $$GamesTableUpdateCompanionBuilder =
       Value<String> boardState,
       Value<int> score,
       Value<int> moveCount,
+      Value<int> boardSize,
+      Value<int> mergeMode,
       Value<DateTime> createdAt,
       Value<DateTime> lastPlayedAt,
     });
@@ -827,6 +923,16 @@ class $$GamesTableFilterComposer extends Composer<_$AppDatabase, $GamesTable> {
 
   ColumnFilters<int> get moveCount => $composableBuilder(
     column: $table.moveCount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get boardSize => $composableBuilder(
+    column: $table.boardSize,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get mergeMode => $composableBuilder(
+    column: $table.mergeMode,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -875,6 +981,16 @@ class $$GamesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get boardSize => $composableBuilder(
+    column: $table.boardSize,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get mergeMode => $composableBuilder(
+    column: $table.mergeMode,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -911,6 +1027,12 @@ class $$GamesTableAnnotationComposer
 
   GeneratedColumn<int> get moveCount =>
       $composableBuilder(column: $table.moveCount, builder: (column) => column);
+
+  GeneratedColumn<int> get boardSize =>
+      $composableBuilder(column: $table.boardSize, builder: (column) => column);
+
+  GeneratedColumn<int> get mergeMode =>
+      $composableBuilder(column: $table.mergeMode, builder: (column) => column);
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -954,6 +1076,8 @@ class $$GamesTableTableManager
                 Value<String> boardState = const Value.absent(),
                 Value<int> score = const Value.absent(),
                 Value<int> moveCount = const Value.absent(),
+                Value<int> boardSize = const Value.absent(),
+                Value<int> mergeMode = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> lastPlayedAt = const Value.absent(),
               }) => GamesCompanion(
@@ -962,6 +1086,8 @@ class $$GamesTableTableManager
                 boardState: boardState,
                 score: score,
                 moveCount: moveCount,
+                boardSize: boardSize,
+                mergeMode: mergeMode,
                 createdAt: createdAt,
                 lastPlayedAt: lastPlayedAt,
               ),
@@ -972,6 +1098,8 @@ class $$GamesTableTableManager
                 required String boardState,
                 Value<int> score = const Value.absent(),
                 Value<int> moveCount = const Value.absent(),
+                Value<int> boardSize = const Value.absent(),
+                Value<int> mergeMode = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> lastPlayedAt = const Value.absent(),
               }) => GamesCompanion.insert(
@@ -980,6 +1108,8 @@ class $$GamesTableTableManager
                 boardState: boardState,
                 score: score,
                 moveCount: moveCount,
+                boardSize: boardSize,
+                mergeMode: mergeMode,
                 createdAt: createdAt,
                 lastPlayedAt: lastPlayedAt,
               ),

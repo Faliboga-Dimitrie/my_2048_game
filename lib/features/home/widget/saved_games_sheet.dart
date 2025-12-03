@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:my_2048_game/features/game/model/board.dart';
 import 'package:my_2048_game/features/home/view_model/home_vm.dart';
-import 'package:provider/provider.dart';
 import 'package:my_2048_game/core/db/app_database.dart';
 
 class SavedGamesSheet extends StatefulWidget {
@@ -20,6 +20,16 @@ class _SavedGamesSheetState extends State<SavedGamesSheet> {
   void initState() {
     super.initState();
     _games = List<Game>.from(widget.games);
+  }
+
+  String _modeLabelFor(int mergeModeIndex) {
+    final mode = MergeMode.values[mergeModeIndex];
+    switch (mode) {
+      case MergeMode.classic:
+        return 'Classic';
+      case MergeMode.cascade:
+        return 'Cascade';
+    }
   }
 
   Future<void> _deleteGame(BuildContext context, Game game, int index) async {
@@ -43,7 +53,7 @@ class _SavedGamesSheetState extends State<SavedGamesSheet> {
     );
 
     if (confirmed != true) return;
-    
+
     final homeVm = widget._homeVm;
     await homeVm.deleteGameById(game.id);
 
@@ -77,16 +87,20 @@ class _SavedGamesSheetState extends State<SavedGamesSheet> {
               separatorBuilder: (_, __) => const Divider(height: 1),
               itemBuilder: (context, index) {
                 final game = _games[index];
+                final modeLabel = _modeLabelFor(game.mergeMode);
+
                 return ListTile(
-                  title: Text('Score: ${game.score}'),
+                  title: Text(
+                    'Score: ${game.score}',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
                   subtitle: Text(
+                    'Size: ${game.boardSize} • Mode: $modeLabel\n'
                     'Moves: ${game.moveCount} • Last played: ${game.lastPlayedAt}',
                   ),
-                  // Tap on the tile to LOAD the game
                   onTap: () {
                     Navigator.of(context).pop<Game>(game);
                   },
-                  // Tiny trashcan on the right to DELETE the game
                   trailing: IconButton(
                     icon: const Icon(Icons.delete_outline),
                     tooltip: 'Delete this saved game',
