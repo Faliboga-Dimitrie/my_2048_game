@@ -44,6 +44,9 @@ class AppDatabase extends _$AppDatabase {
 
   Future<List<User>> getAllUsers() => select(users).get();
 
+  Future<int> deleteUser(int id) =>
+    (delete(users)..where((u) => u.id.equals(id))).go();
+
   // ---------------- GAME QUERIES ----------------
 
   Future<int> createGame({
